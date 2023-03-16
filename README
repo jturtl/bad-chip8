@@ -1,0 +1,30 @@
+A Chip-8 emulator and assembler that i made long, long ago. Preserved exactly as it was.
+Even the other README file that contains only "//todo"
+Even every obvious memory leaks and dumb comment.
+Even the hacky powershell build script because i was not yet enlighted by Linux (and Makefiles).
+Even the awkward assembly language that requires all caps keywords.
+Even the emulator incompatibility.
+Even the non-standard instructions "PIXEL" (5XY1) and "BREAK" (0000)
+Even the inconsistent code style.
+
+It's all portable C code, and can be compiled with a simple `cc src/*.c -Iinclude`.
+The emulator requires SDL2, so... `cc src/*.c -Iinclude -lSDL2`.
+Or if you're on windows and have your SDL library files exactly where i had them years ago, you can run my fancy powershell scripts. I worked really hard on those!
+
+See `cmds.txt` for a quick assembler reference, and `asm/examples`.
+
+The emulator uses these keys (QWERTY) for input:
+
+  1 2 3
+  Q W E
+  A S D
+  Z X C
+
+The arrow keys are mapped to "2" (up) "Q" (left) "E" (right) "S" (down).
+
+The emulator is **not** very compatible, it's basically only good for roms made by the `asm` program, whose compatibility i have literally never tested with another emulator. So calling it "Chip-8" might be a stretch... more like "Chip-8-esque".
+Also, no sound. Sorry, audio is hard :(
+
+The emulator expects a file named "out.ch8rom" in the current working directory.
+
+Have fun.

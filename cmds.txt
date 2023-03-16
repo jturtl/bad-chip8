@@ -1,0 +1,244 @@
+CH8ASM OVERVIEW
+
+R0 -> RF = Registers
+I = Index Register
+$NNN = Hex Number
+#NNN = Decimal Number
+%NNN = Binary Number
+:ABCD = Label
+TIMER = Delay Timer
+SOUND = Sound Timer
+
+COMMAND SYNTAX
+
+COMMAND ; no arguments
+COMMAND $ARG1
+COMMAND $ARG1, $ARG2
+COMMAND $ARG1, $ARG2, $ARG3
+
+';' Denotes a comment
+
+; This is a comment
+COMMAND $ARG1 ; This is also a comment
+
+COMMAND LIST
+
+0000
+  "Break"
+  Stops interpreter. Non-standard, only exists for testing
+  BREAK
+  #no example
+
+00E0
+  "Clear"
+  Clears screen.
+  CLEAR
+  #no example
+
+00EE
+  "Return"
+  Returns from a subroutine.
+  RETURN
+  #no example
+
+1NNN
+  "Jump"
+  Jumps to NNN.
+  JUMP
+    JUMP $3FA   ; Jump to specific address
+    JUMP :LABEL ; Jump to a label
+
+2NNN
+  "Subroutine"
+  Jump to NNN, remember the location that was jumped from.
+  SUBROUTINE
+    SUBROUTINE $3FA   ; Specific address
+    SUBROUTINE :LABEL ; Label
+
+3XNN
+  "If Not Equal"
+  Skip next instruction if RX = NN (Only run it If RX is not equal to NN)
+  IFNEQ
+    IFNEQ R2, $69
+
+4XNN
+  "If Equal"
+  Skip next instruction if RX != NN
+  IFEQ
+    IFEQ R2, $69
+
+5XY0
+  "If Not Equal - Register"
+  Skip next instruction if RX = RY
+  IFNEQ
+    IFNEQ R2, RA
+
+6XNN
+  "Set"
+  Set RX to NN
+  SET
+    SET R2, $69
+
+7XNN
+  "Add"
+  Add NN to RX
+  ADD
+    ADD R2, $69
+
+8XY0
+  "Set - Register"
+  Set RX to RY
+  SET
+    SET R2, RA
+
+8XY1
+  "Bitwise OR"
+  Set RX to RX | RY
+  OR
+    OR R2, RA
+
+8XY2
+  "Bitwise AND"
+  Set RX to RX & RY
+  AND
+    AND R2, RA
+
+8XY3
+  "Bitwise Exclusive-OR"
+  Set RX to RX ^ RY
+  XOR
+    XOR R2, RA
+
+8XY4
+  "Add - Register"
+  Add RY to RX, set RF to 1 if a carry occurs
+  ADD
+    ADD R2, RA
+
+8XY5
+  "Subtract - Register"
+  Subtract RY from RX, set RF to 1 if a borrow doesn't occur
+  SUB
+    SUB R2, RA
+
+8XY6
+  "Right Shift"
+  Binary Shift RX to the right, set RF to RX's Least Significant Bit
+  RSHIFT
+    RSHIFT R2
+
+8XY7
+  "Reverse Subtract - Register"
+  Set RX to RY - RX, set RF to 1 if a borrow doesn't occur
+  REVSUB
+    REVSUB R2, RA
+
+8XYE
+  "Left Shift"
+  Binary Shift RX to the left, set RF to RX's Most Significant Bit
+  LSHIFT
+    LSHIFT R2
+
+9XY0
+  "If Equal - Register"
+  Skip next instruction if RX != RY
+  IFEQ
+    IFEQ R2, RA
+
+ANNN
+  "Set I"
+  Set Register I to NNN
+  SET
+    SET I, $696
+
+BNNN
+  "Jump with Register 0 Offset"
+  Jump to Address NNN plus the number in R0
+  JUMP
+    JUMP $696, R0
+
+CXNN
+  "Random"
+  Set RX to a random number 0-255, bitwise ANDed with NN
+  RANDOM
+    RANDOM R2, $69
+
+DXYN
+  "Don't worry about it"
+  Don't worry about it
+  DRAW
+    DRAW R2, RA, $3
+
+EX9E
+  "If Not Key"
+  Skip next instruction if the key in RX is pressed
+  IFNKEY
+    IFNKEY R2
+
+EXA1
+  "If Key"
+  Skip next instruction if the key in RX is not pressed
+  IFKEY
+    IFKEY R2
+
+FX07
+  "Set - Timer"
+  Set RX to the value in the Timer
+  SET
+    SET R2, TIMER
+
+FX0A
+  "Await Key"
+  Halt execution until a key is pressed, then put it in RX
+  AWAIT
+    AWAIT R2
+
+FX15
+  "Set - Timer"
+  Set Timer to the value in RX
+  SET
+    SET TIMER, R2
+
+FX18
+  "Set - Sound"
+  Set Sound Timer to the value in RX
+  SET
+    SET SOUND, R2
+
+FX1E
+  "Add - Index"
+  Add RX to Register I
+  ADD
+    ADD I, R2
+
+FX29
+  "Char Sprite"
+  Set Register I to the location of the hex char sprite in RX
+  SETSPRITE
+    SETSPRITE R2
+
+FX33
+  "Binary Coded Decimal"
+  Store the BCD representation of RX at I -> I+3
+  BCD
+    BCD R2
+
+FX55
+  "Register Dump"
+  Dump the values of registers 0 thru X at I -> I + X
+  DUMP
+    DUMP $6
+
+FX65
+  "Register Fill"
+  Fill registers 0 thru X from I -> I + X
+  FILL
+    FILL $6
+
+SPECIAL
+  "Data"
+  Set byte data at the command's location
+  DATA
+    DATA $FF ; single byte
+    DATA $FF, $FF ; more data
+    DATA $FF, $FF, $FF, $FF ; this can go on for a while.

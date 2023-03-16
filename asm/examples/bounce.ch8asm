@@ -1,0 +1,27 @@
+:MAIN
+  SET R0, #10
+  SET R1, #10
+  SET R2, #1
+  SET R3, #1
+:LOOP
+  SET RA, TIMER
+  IFNEQ RA, #0
+    JUMP :LOOP
+
+  CLEAR
+  PIXEL R0, R1
+  ADD R0, R2
+  ADD R1, R3
+  IFEQ R0, #0
+    SET R2, #1
+  IFEQ R0, #63
+    SET R2, #255
+  IFEQ R1, #0
+    SET R3, #1
+  IFEQ R1, #31
+    SET R3, #255
+
+  SET RA, #5
+  SET TIMER, RA
+
+  JUMP :LOOP

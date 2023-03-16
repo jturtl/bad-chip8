@@ -1,0 +1,263 @@
+:MAIN
+  SET R0, #2  ; Left Paddle X
+  SET R1, #12 ; Left Paddle Y
+
+  SET R2, #61 ; Right Paddle X
+  SET R3, #12 ; Right Paddle Y
+
+  SUBROUTINE :RESETBALL
+
+  SET R6, #0 ; Left score
+  SET R7, #0 ; Right score
+
+  ; RA - RF unreserved
+
+;;; MAIN LOOP ;;;
+
+:LOOP
+
+  ; Wait for the timer to finish
+  SET RA, TIMER
+  IFNEQ RA, #0
+    JUMP :LOOP
+
+  ; Check keys
+  SET RA, $2
+  IFKEY RA
+    SUBROUTINE :UPKEY
+  SET RA, $8
+  IFKEY RA
+    SUBROUTINE :DOWNKEY
+
+  ; Do AI
+  ; Is the ball on the right side?
+  ; AKA: is R4 > #15?
+  SET RA, #15
+  SUB RA, R4
+  IFEQ RF, #0 ; Borrow occurred, R4 > RA
+    SUBROUTINE :PADDLEAI
+
+  ; Update ball
+
+  ; Update ball position
+  ADD R4, R8
+  ADD R5, R9
+
+  ; Check X
+  IFEQ R4, #63
+    SUBROUTINE :LPADDLESCORE
+  IFEQ R4, #0
+    SUBROUTINE :RPADDLESCORE
+
+  ; Check Y
+  ; Invert direction if touching a wall
+  IFEQ R5, #31
+    SET R9, #255
+  IFEQ R5, #0
+    SET R9, #1
+
+  ; Check paddle collision
+  IFEQ R4, #3 ; maybe touching the left paddle
+    SUBROUTINE :LPADDLECHECK
+  IFEQ R4, #60 ; right paddle
+    SUBROUTINE :RPADDLECHECK
+
+
+  CLEAR
+
+
+  ; Draw Center Bar
+  SET I, :PADDLE ; yeah, use the paddle sprite
+  ; Set to the middle... almost
+  ; darn even-number sized screen
+  SET RA, #31
+  SET RB, #0
+  DRAW RA, RB, #6
+  SET RB, #6
+  DRAW RA, RB, #6
+  SET RB, #12
+  DRAW RA, RB, #6
+  SET RB, #18
+  DRAW RA, RB, #6
+  SET RB, #24
+  DRAW RA, RB, #6
+  SET RB, #30
+  DRAW RA, RB, #2
+
+  ; Draw Paddles
+  ; Sprite is already set to the paddle
+  DRAW R0, R1, #6
+  DRAW R2, R3, #6
+
+  ; Draw Ball
+  ; Just draw the paddle 1 pixel tall
+  DRAW R4, R5, #1
+
+  ; Draw Scores
+  SETSPRITE R6
+  SET RA, #10
+  SET RB, #1
+  DRAW RA, RB, #5
+  SETSPRITE R7
+  SET RA, #50
+  DRAW RA, RB, #5
+
+  ; Get highest score
+  SET RB, R6
+  SUB RB, R7
+  IFEQ RF, #0
+    SET RB, R7
+  IFEQ RF, #1
+    SET RB, R6
+
+  ; If the highest score/2 is >=5, set the timer to 2
+  ; Else, set it to (5 - highest/2)
+  RSHIFT RB
+  SET RA, #5
+  SUB RA, RB
+  IFEQ RF, #0
+    SET RA, #1
+
+  SET TIMER, RA
+
+  JUMP :LOOP
+
+;;; SUBS ;;;
+
+:UPKEY
+  IFNEQ R1, #0
+    ADD R1, #255
+  RETURN
+
+:DOWNKEY
+  IFNEQ R1, #26
+    ADD R1, #1
+  RETURN
+
+:PADDLEAI
+  SET RA, R3 ; Paddle Y
+  SUB RA, R5 ; Compare to Ball Y
+  IFEQ RF, #1 ; Ball Y >= Paddle Y
+    JUMP :PADDLEAI0
+
+  ; Ball Y < Paddle Y
+  ; Move up
+  ADD R3, #255
+  RETURN
+
+:PADDLEAI0
+  ; If RA = 0, then Ball Y = Paddle Y
+  IFEQ RA, #0
+    RETURN
+
+  ; Is Ball Y >= Paddle Y + 6?
+  SET RA, R5
+  SET RB, R3
+  ADD RB, #5
+  SUB RA, RB
+  IFEQ RF, #0
+    RETURN
+
+  ADD R3, #1
+
+  RETURN
+
+
+:LPADDLECHECK
+
+  ; Is R5 >= R1?
+  SET RA, R5
+  SUB RA, R1
+  ; RA = 0? They're equal
+  IFEQ RA, #0
+    JUMP :LPADDLECHECK0
+  ; Borrow? R5 is less than R1.
+  IFEQ RF, #0
+    RETURN
+
+:LPADDLECHECK0
+
+  ; Well, we made it here.
+  ; So far, R5 >= R1
+  ; But is it less than/equal to R1 + 5?
+  SET RA, R5
+  SET RB, R1
+  ADD RB, #5
+  SUB RA, RB
+  IFEQ RA, #0
+    JUMP :LPADDLECHECK1
+  IFEQ RF, #1
+    RETURN ; No borrow, R5 was bigger
+
+:LPADDLECHECK1
+
+  ; Finally! The paddle is, indeed, colliding.
+  ; Invert X direction
+  IFEQ R8, #255
+    SET R8, #1
+
+  RETURN
+
+
+:RPADDLECHECK
+  SET RA, R5
+  SUB RA, R3
+  IFEQ RA, #0
+    JUMP :RPADDLECHECK0
+  IFEQ RF, #0
+    RETURN
+:RPADDLECHECK0
+  SET RA, R5
+  SET RB, R3
+  ADD RB, #5
+  SUB RA, RB
+  IFEQ RA, #0
+    JUMP :RPADDLECHECK1
+  IFEQ RF, #1
+    RETURN
+:RPADDLECHECK1
+  IFEQ R8, #1
+    SET R8, #255
+  RETURN
+
+
+:LPADDLESCORE
+  ADD R6, #1
+  SUBROUTINE :RESETBALL
+  RETURN
+
+:RPADDLESCORE
+  ADD R7, #1
+  SUBROUTINE :RESETBALL
+  RETURN
+
+:RESETBALL
+  SET R4, #32 ; Ball X
+  SET R5, #15 ; Ball Y
+  RANDOM RA, #1
+  IFEQ RA, #1
+    JUMP :RESETBALL0
+  SET R8, #1
+  JUMP :RESETBALL1
+:RESETBALL0
+  SET R8, #255
+:RESETBALL1
+  RANDOM RA, #1
+  IFEQ RA, #1
+    JUMP :RESETBALL2
+  SET R9, #1
+  RETURN
+:RESETBALL2
+  SET R9, #255
+  RETURN
+
+;;; DATA ;;;
+
+; Paddle Sprite. Height: 6
+:PADDLE
+  DATA %10000000
+  DATA %10000000
+  DATA %10000000
+  DATA %10000000
+  DATA %10000000
+  DATA %10000000
